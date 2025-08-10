@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Fitness – Mascia</title>
+  <style>
+    :root{
+      --bg:#faf7fb;             /* fondo chiaro */
+      --panel:#ffffff;          /* pannelli */
+      --ink:#1f2330;            /* testo */
+      --muted:#6b6f7b;         /* testo attenuato */
+      --brand:#e86bb1;          /* rosa principale */
+      --brand-2:#ff9bd3;       /* rosa accento */
+      --brand-3:#ffd8ef;       /* rosa chiarissimo */
+      --ok:#2fbf71;
+      --warn:#ffb200;
+      --danger:#ff5c7a;
+      --ring: 0 0 0 3px rgba(232,107,177,.25);
+      --radius:20px;
+      --shadow:0 8px 28px rgba(31,35,48,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background:linear-gradient(180deg,var(--bg),#fff 60%);
+      color:var(--ink);
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      background:rgba(255,255,255,.85); backdrop-filter:saturate(140%) blur(8px);
+      border-bottom:1px solid #f1e9f4;
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:16px 20px}
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:44px; height:44px; border-radius:12px; background: radial-gradient(120% 120% at 20% 20%, var(--brand-2), var(--brand));
+      box-shadow: inset 0 -6px 20px rgba(31,35,48,.12), 0 8px 18px rgba(232,107,177,.25);
+    }
+    h1{font-size:clamp(20px,2.2vw,28px); margin:0}
+    .sub{color:var(--muted); font-size:14px}
+
+    .grid{
+      display:grid; gap:16px; grid-template-columns: repeat(12, 1fr);
+      align-items:stretch;
+    }
+    .card{
+      background:var(--panel); border:1px solid #f1e9f4; border-radius: var(--radius); box-shadow: var(--shadow);
+      padding:18px; display:flex; flex-direction:column; gap:12px;
+    }
+    .card h2{margin:0; font-size:18px}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .tag{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:var(--brand-3); color:#7a2a58; font-weight:600; font-size:12px}
+
+    .kpis{display:grid; grid-template-columns:repeat(4,minmax(110px,1fr)); gap:12px}
+    .kpi{padding:14px; border-radius:14px; background:linear-gradient(180deg,#fff,var(--bg)); border:1px solid #f3ecf6}
+    .kpi .big{font-size:22px; font-weight:800}
+    .kpi small{color:var(--muted)}
+
+    .btn{appearance:none; border:1px solid #f1e9f4; padding:10px 14px; border-radius:12px; background:#fff; cursor:pointer; font-weight:600}
+    .btn:hover{box-shadow: var(--shadow)}
+    .btn.primary{background:linear-gradient(180deg,var(--brand-2),var(--brand)); color:#fff; border-color:transparent}
+    .btn.ghost{background:transparent}
+
+    input[type="text"], input[type="number"], select, textarea{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid #e9deee; background:#fff;
+    }
+    input:focus, select:focus, textarea:focus{outline:none; box-shadow: var(--ring); border-color: var(--brand-2)}
+    label{font-size:12px; color:var(--muted)}
+
+    .cols-2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .cols-3{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+    .cols-4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+
+    details{border:1px dashed #edd7e6; padding:12px; border-radius:12px; background:#fff}
+    details>summary{cursor:pointer; font-weight:700; color:#7a2a58}
+
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th, td{border-bottom:1px solid #f0e6f2; padding:10px; text-align:left}
+    th{background:#fff0fa}
+
+    .pill{padding:6px 10px; border-radius:999px; border:1px solid #f1e9f4; background:#fff}
+
+    .footer{color:var(--muted); font-size:12px; text-align:center; padding:24px 0}
+
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+      .cols-4, .cols-3, .cols-2{grid-template-columns:1fr}
+      .kpis{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Dashboard Fitness – Mascia</h1>
+        <div class="sub">Piano personalizzato: nutrizione, allenamento, monitoraggio giornaliero</div>
+      </div>
+      <div style="margin-left:auto" class="row">
+        <button class="btn" id="resetBtn" title="Reimposta dati">Reimposta</button>
+        <button class="btn primary" id="exportBtn" title="Esporta dati">Esporta</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none"/>
+        <button class="btn" id="importBtn" title="Importa dati">Importa</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding-top:18px">
+    <section class="grid" style="margin-bottom:12px">
+      <div class="card" style="grid-column: span 7">
+        <div class="row" style="justify-content:space-between">
+          <h2>Oggi</h2>
+          <div class="tag" id="todayTag">—</div>
+        </div>
+        <div class="cols-3">
+          <div>
+            <label>Giornata</label>
+            <select id="dayType">
+              <option value="riposo">Riposo</option>
+              <option value="A">Upper (Forza) – Giorno A</option>
+              <option value="B">Lower (Forza) – Giorno B</option>
+              <option value="C">Upper (Ipertrofia) – Giorno C</option>
+              <option value="D">Lower (Ipertrofia) – Giorno D</option>
+            </select>
+          </div>
+          <div>
+            <label>Obiettivo passi</label>
+            <input id="stepsTarget" type="number" min="0" step="500" placeholder="es. 8000" />
+          </div>
+          <div>
+            <label>Assunzione acqua (L)</label>
+            <input id="waterLiters" type="number" min="0" step="0.25" placeholder="2.5" />
+          </div>
+        </div>
+        <div class="cols-2">
+          <div class="row">
+            <label class="pill"><input type="checkbox" id="chkWarm"> Riscaldamento & Mobilità</label>
+            <label class="pill"><input type="checkbox" id="chkTrain"> Allenamento completato</label>
+            <label class="pill"><input type="checkbox" id="chkStretch"> Defaticamento / Stretch</label>
+            <label class="pill"><input type="checkbox" id="chkCreatine"> Creatina 3 g</label>
+          </div>
+          <div class="row">
+            <label class="pill"><input type="checkbox" id="chkPreSnack"> Spuntino pre-wo</label>
+            <label class="pill"><input type="checkbox" id="chkPostShake"> Post-wo (shake/pasto)</label>
+            <label class="pill"><input type="checkbox" id="chkSleep"> 7–9h sonno</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column: span 5">
+        <h2>Target nutrizionali</h2>
+        <div class="kpis">
+          <div class="kpi"><div class="big" id="kcal">2200</div><small>kcal</small></div>
+          <div class="kpi"><div class="big" id="p">110 g</div><small>Proteine</small></div>
+          <div class="kpi"><div class="big" id="c">303 g</div><small>Carboidrati</small></div>
+          <div class="kpi"><div class="big" id="f">61 g</div><small>Grassi</small></div>
+        </div>
+        <details style="margin-top:8px">
+          <summary>Personalizza i target</summary>
+          <div class="cols-4" style="margin-top:10px">
+            <div><label>Kcal</label><input id="inKcal" type="number" value="2200" min="1200" step="50"></div>
+            <div><label>Proteine (g)</label><input id="inP" type="number" value="110" min="60" step="5"></div>
+            <div><label>Carboidrati (g)</label><input id="inC" type="number" value="303" min="100" step="5"></div>
+            <div><label>Grassi (g)</label><input id="inF" type="number" value="61" min="30" step="1"></div>
+          </div>
+          <div class="row" style="margin-top:10px; justify-content:flex-end"><button class="btn" id="applyTargets">Applica</button></div>
+        </details>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card" style="grid-column: span 7">
+        <h2>Piano pasti del giorno</h2>
+        <div class="cols-2">
+          <div>
+            <label>Colazione (~450 kcal)</label>
+            <select class="meal" id="mealBreakfast"></select>
+          </div>
+          <div>
+            <label>Spuntino 1 (~300 kcal)</label>
+            <select class="meal" id="mealSnack1"></select>
+          </div>
+          <div>
+            <label>Pranzo (~600 kcal)</label>
+            <select class="meal" id="mealLunch"></select>
+          </div>
+          <div>
+            <label>Spuntino 2 (pre-wo) (~300 kcal)</label>
+            <select class="meal" id="mealSnack2"></select>
+          </div>
+          <div>
+            <label>Cena (~550 kcal)</label>
+            <select class="meal" id="mealDinner"></select>
+          </div>
+        </div>
+        <details style="margin-top:10px">
+          <summary>Guida alle sostituzioni</summary>
+          <div style="margin-top:10px">
+            <table>
+              <thead><tr><th>Fonti Proteiche (≈20–25 g)</th><th>Fonti Carboidrati (≈40 g)</th><th>Fonti Grassi (≈10 g)</th></tr></thead>
+              <tbody>
+                <tr><td>100 g petto pollo/tacchino</td><td>50 g riso/pasta/avena (crudi)</td><td>10 g olio EVO/lino</td></tr>
+                <tr><td>120 g merluzzo/nasello</td><td>200 g patate</td><td>15–20 g frutta secca</td></tr>
+                <tr><td>100 g manzo magro</td><td>70 g pane integrale/segale</td><td>50 g avocado</td></tr>
+                <tr><td>2 uova + 100 g albume</td><td>60 g legumi secchi</td><td>20 g burro di arachidi 100%</td></tr>
+                <tr><td>150 g yogurt greco 0%</td><td>60 g quinoa/farro/orzo (crudi)</td><td>20 g cioccolato fondente ≥85%</td></tr>
+                <tr><td>100 g fiocchi di latte</td><td>300 g zucca cotta</td><td>15 g semi (chia/lino/girasole)</td></tr>
+                <tr><td>120 g tonno al naturale</td><td>1 banana + 1 mela</td><td>—</td></tr>
+                <tr><td>30 g whey/caseina</td><td>4–5 fette biscottate integrali</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+
+      <div class="card" style="grid-column: span 5">
+        <h2>Allenamento della settimana</h2>
+        <div class="row" id="planTabs" role="tablist" aria-label="Piani">
+          <button class="btn" data-tab="A">A</button>
+          <button class="btn" data-tab="B">B</button>
+          <button class="btn" data-tab="C">C</button>
+          <button class="btn" data-tab="D">D</button>
+        </div>
+        <div id="planContent" style="margin-top:8px"></div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card" style="grid-column: span 7">
+        <h2>Monitoraggio & Note</h2>
+        <div class="cols-4">
+          <div><label>Peso (kg)</label><input id="logWeight" type="number" step="0.1" placeholder=""></div>
+          <div><label>Vita (cm)</label><input id="logWaist" type="number" step="0.1" placeholder=""></div>
+          <div><label>Fianchi (cm)</label><input id="logHips" type="number" step="0.1" placeholder=""></div>
+          <div><label>Sonno (h)</label><input id="logSleep" type="number" step="0.1" placeholder=""></div>
+        </div>
+        <div class="cols-2" style="margin-top:8px">
+          <div><label>Energia (1–10)</label><input id="logEnergy" type="number" min="1" max="10" step="1" placeholder=""></div>
+          <div><label>DOMS (1–10)</label><input id="logDOMS" type="number" min="1" max="10" step="1" placeholder=""></div>
+        </div>
+        <div style="margin-top:8px">
+          <label>Note</label>
+          <textarea id="logNotes" rows="3" placeholder="Sensazioni, progressi, carichi..."></textarea>
+        </div>
+        <div class="row" style="justify-content:flex-end; margin-top:8px">
+          <button class="btn" id="saveLog">Salva giornata</button>
+        </div>
+        <details style="margin-top:8px">
+          <summary>Storico giornate</summary>
+          <div id="logTableWrap" style="margin-top:8px"></div>
+        </details>
+      </div>
+
+      <div class="card" style="grid-column: span 5">
+        <h2>Promemoria & Consigli</h2>
+        <ul style="margin:0 0 6px 18px; line-height:1.8">
+          <li>Creatina monoidrato (Creapure) 3–5 g/die, anche nei giorni di riposo.</li>
+          <li>Concentra una quota di carboidrati <b>pre</b> e <b>post-allenamento</b>.</li>
+          <li>Idratazione: 2–3 L al giorno, di più quando ti alleni.</li>
+          <li>Obiettivo sonno: 7–9 ore di qualità.</li>
+          <li>Progressione: raggiungi il top del range ripetizioni, poi alza il carico di poco.</li>
+        </ul>
+        <div class="row" style="gap:8px">
+          <button class="btn" id="quickDone">Segna giornata completata</button>
+          <button class="btn ghost" id="themeToggle">Tema chiaro/rosa</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">Creato su misura a partire dal tuo documento. I dati vengono salvati in locale (browser) e possono essere esportati/importati.</div>
+  </main>
+
+  <script>
+    // ---- Helpers: storage ----
+    const KEY = 'mascia-dashboard-v1';
+    const state = JSON.parse(localStorage.getItem(KEY) || '{}');
+    const $ = sel => document.querySelector(sel);
+
+    function save(){
+      localStorage.setItem(KEY, JSON.stringify(state));
+    }
+
+    // ---- Date tag ----
+    function formatDate(d){
+      return d.toLocaleDateString('it-IT', { weekday:'long', year:'numeric', month:'2-digit', day:'2-digit' });
+    }
+    $('#todayTag').textContent = formatDate(new Date());
+
+    // ---- Defaults from PDF ----
+    const defaults = {
+      kcal: 2200, p:110, c:303, f:61,
+      meals: {
+        breakfast:[
+          'Porridge avena 60g + whey 30g + frutti di bosco + mandorle 15g',
+          'Yogurt greco 200g + muesli 40g + banana + semi di chia 10g',
+          'Omelette (2 uova + 100g albume) + pane integrale 50g + frutto'
+        ],
+        snack:[
+          'Yogurt greco 170g + mela + noci 15g',
+          'Frullato: latte 200ml + whey 30g + banana',
+          '3 gallette + fiocchi di latte 100g (o bresaola 80g)'
+        ],
+        lunch:[
+          'Riso basmati 80g + pollo 150g + verdure grigliate + olio EVO 15g',
+          'Bowl: salmone 150g + patate dolci 200g + insalata + salsa yogurt',
+          'Pasta integrale 80g + lenticchie secche 60g + sugo + EVO 10g'
+        ],
+        dinner:[
+          'Pesce al cartoccio 180g + patate 250g + asparagi + EVO 10g',
+          'Tagliata magra 120g + rucola + grana 15g + pane 60g',
+          'Tofu affumicato 150g o gamberi + verdure salta + noodles riso 70g'
+        ]
+      },
+      plan: {
+        A:[
+          ['Panca piana bilanciere','4×5–8','120–150s','Tecnica: petto alto, scapole addotte'],
+          ['Rematore bilanciere','4×6–8','120s','Tira verso addome basso'],
+          ['Lento avanti manubri (seduta)','3×6–8','90s',''],
+          ['Lat machine prona','3×6–8','90s','Verso petto alto, controlla risalita'],
+          ['Curl EZ','3×8–10','60–75s','Vicino al cedimento'],
+          ['French press manubri','3×8–10','60–75s','Controlla discesa']
+        ],
+        B:[
+          ['Squat bilanciere','4×5–8','150s','Schiena neutra, profondità'],
+          ['Hip thrust bilanciere','4×6–8','120s','Picco di contrazione'],
+          ['Stacchi rumeni manubri','3×8–10','90s','Hinge sui femorali'],
+          ['Affondi manubri','3×8–10/gamba','90s','Passo lungo, controllo'],
+          ['Calf raise pressa','3×10–12','60s','ROM completo']
+        ],
+        C:[
+          ['Panca inclinata manubri','3×10–12','75–90s','Parte alta del petto'],
+          ['Rematore macchina (chest supported)','3×10–12','75s','Isola il dorso'],
+          ['Alzate laterali','4×12–15','60s','Controllo, no slancio'],
+          ['Pulley presa stretta','3×10–12','75s','Contrazione del dorso'],
+          ['Curl su panca inclinata','3×12–15','60s','Allungamento bicipite'],
+          ['Push down corda','3×12–15','60s','Gomiti fermi']
+        ],
+        D:[
+          ['Leg press 45°','4×10–12','90s','Piedi a metà pedana'],
+          ['Good morning bilanciere','3×10–12','90s','Lento e controllato'],
+          ['Leg extension','3×12–15','60s','Contrazione in cima'],
+          ['Leg curl','3×12–15','60s','Controllo salita/discesa'],
+          ['Glute machine / Slanci cavi','3×15–20/gamba','60s','Picco contrazione']
+        ]
+      }
+    };
+
+    // ---- Init targets ----
+    function renderTargets(){
+      $('#kcal').textContent = state.kcal || defaults.kcal;
+      $('#p').textContent = (state.p ?? defaults.p) + ' g';
+      $('#c').textContent = (state.c ?? defaults.c) + ' g';
+      $('#f').textContent = (state.f ?? defaults.f) + ' g';
+      $('#inKcal').value = state.kcal || defaults.kcal;
+      $('#inP').value = state.p ?? defaults.p;
+      $('#inC').value = state.c ?? defaults.c;
+      $('#inF').value = state.f ?? defaults.f;
+    }
+
+    $('#applyTargets').addEventListener('click', ()=>{
+      state.kcal = parseInt($('#inKcal').value||defaults.kcal,10);
+      state.p = parseInt($('#inP').value||defaults.p,10);
+      state.c = parseInt($('#inC').value||defaults.c,10);
+      state.f = parseInt($('#inF').value||defaults.f,10);
+      renderTargets(); save();
+    });
+
+    // ---- Meals ----
+    function fillMealSelect(el, opts){
+      el.innerHTML = '';
+      opts.forEach(o=>{
+        const opt = document.createElement('option'); opt.value = o; opt.textContent=o; el.appendChild(opt);
+      });
+    }
+    fillMealSelect($('#mealBreakfast'), defaults.meals.breakfast);
+    fillMealSelect($('#mealSnack1'), defaults.meals.snack);
+    fillMealSelect($('#mealLunch'), defaults.meals.lunch);
+    fillMealSelect($('#mealSnack2'), defaults.meals.snack);
+    fillMealSelect($('#mealDinner'), defaults.meals.dinner);
+
+    // Persist selected meals
+    document.querySelectorAll('.meal').forEach(sel=>{
+      const id = sel.id;
+      sel.value = state[id] || sel.options[0]?.value;
+      sel.addEventListener('change', ()=>{ state[id]=sel.value; save(); });
+    });
+
+    // ---- Day controls ----
+    const dayControls = ['stepsTarget','waterLiters','chkWarm','chkTrain','chkStretch','chkCreatine','chkPreSnack','chkPostShake','chkSleep'];
+    $('#dayType').value = state.dayType || 'riposo';
+    $('#dayType').addEventListener('change', ()=>{ state.dayType = $('#dayType').value; save(); });
+    dayControls.forEach(id=>{
+      const el = $('#'+id);
+      if(el.type==='checkbox'){ el.checked = !!state[id]; }
+      else { el.value = state[id] ?? ''; }
+      el.addEventListener(el.type==='checkbox'?'change':'input', ()=>{ state[id] = (el.type==='checkbox'? el.checked : el.value); save(); });
+    });
+
+    // ---- Plan tabs ----
+    function renderPlan(tab){
+      const list = defaults.plan[tab];
+      const wrap = document.createElement('div');
+      list.forEach(([name,vol,rest,note])=>{
+        const row = document.createElement('div');
+        row.className='card'; row.style.padding='12px'; row.style.marginBottom='8px';
+        row.innerHTML = `<div class="row" style="justify-content:space-between"><b>${name}</b><span class="pill">${vol}</span></div>
+                         <div class="row" style="gap:14px"><small>Recupero: ${rest}</small>${note?`<small>• ${note}</small>`:''}</div>`;
+        wrap.appendChild(row);
+      });
+      const c = $('#planContent'); c.innerHTML=''; c.appendChild(wrap);
+      [...$('#planTabs').children].forEach(b=>b.classList.remove('primary'));
+      const activeBtn = [...$('#planTabs').children].find(b=>b.dataset.tab===tab); if(activeBtn){ activeBtn.classList.add('primary'); }
+      state.activePlan = tab; save();
+    }
+    $('#planTabs').addEventListener('click', (e)=>{
+      if(e.target.dataset.tab){ renderPlan(e.target.dataset.tab); }
+    });
+
+    renderPlan(state.activePlan || 'A');
+
+    // ---- Logs ----
+    function todayKey(){
+      const d = new Date();
+      return d.toISOString().slice(0,10);
+    }
+    function currentLog(){
+      state.logs = state.logs || {}; return state.logs[todayKey()] || {};
+    }
+    function setLog(k,v){
+      state.logs = state.logs || {}; state.logs[todayKey()] = {...currentLog(), [k]:v}; save();
+    }
+
+    const logIds = ['logWeight','logWaist','logHips','logSleep','logEnergy','logDOMS','logNotes'];
+    logIds.forEach(id=>{
+      const el = $('#'+id);
+      el.value = currentLog()[id] ?? '';
+      el.addEventListener('input', ()=> setLog(id, el.value));
+    });
+
+    function renderLogTable(){
+      const logs = state.logs || {};
+      const keys = Object.keys(logs).sort();
+      if(keys.length===0){ $('#logTableWrap').innerHTML = '<div class="sub">Nessun dato salvato.</div>'; return; }
+      let html = '<table><thead><tr><th>Data</th><th>Peso</th><th>Vita</th><th>Fianchi</th><th>Sonno</th><th>Energia</th><th>DOMS</th><th>Note</th></tr></thead><tbody>';
+      keys.forEach(k=>{
+        const L = logs[k];
+        html += `<tr><td>${k}</td><td>${L.logWeight||''}</td><td>${L.logWaist||''}</td><td>${L.logHips||''}</td><td>${L.logSleep||''}</td><td>${L.logEnergy||''}</td><td>${L.logDOMS||''}</td><td>${(L.logNotes||'').replace(/</g,'&lt;')}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      $('#logTableWrap').innerHTML = html;
+    }
+
+    $('#saveLog').addEventListener('click', ()=>{ renderLogTable(); });
+    renderLogTable();
+
+    // ---- Quick actions ----
+    $('#quickDone').addEventListener('click', ()=>{
+      ['chkWarm','chkTrain','chkStretch','chkCreatine','chkPreSnack','chkPostShake','chkSleep'].forEach(id=>{ const el=$('#'+id); el.checked=true; state[id]=true; });
+      save();
+    });
+
+    // ---- Theme toggle ----
+    let alt=false;
+    $('#themeToggle').addEventListener('click', ()=>{
+      alt=!alt;
+      document.documentElement.style.setProperty('--bg', alt?'#fff7fb':'#faf7fb');
+      document.documentElement.style.setProperty('--brand', alt?'#ff6bb9':'#e86bb1');
+      document.documentElement.style.setProperty('--brand-2', alt?'#ff98d2':'#ff9bd3');
+      document.documentElement.style.setProperty('--brand-3', alt?'#ffe2f3':'#ffd8ef');
+    });
+
+    // ---- Import/Export/Reset ----
+    $('#exportBtn').addEventListener('click', ()=>{
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'mascia-dashboard.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    $('#importBtn').addEventListener('click', ()=> $('#importFile').click());
+    $('#importFile').addEventListener('change', (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{ try{ Object.assign(state, JSON.parse(reader.result)); save(); location.reload(); }catch(err){ alert('File non valido'); } };
+      reader.readAsText(file);
+    });
+
+    $('#resetBtn').addEventListener('click', ()=>{
+      if(confirm('Reimpostare tutti i dati locali?')){ localStorage.removeItem(KEY); location.reload(); }
+    });
+
+    // ---- Initial render ----
+    renderTargets();
+  </script>
+</body>
+</html>
