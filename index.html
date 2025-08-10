@@ -1,10 +1,5 @@
 <!DOCTYPE html>
 <html lang="it">
-<script>
-  const pwd = prompt("Marina");
-  if (pwd !== "Marina") {
-    document.body.innerHTML = "<h1>Accesso negato</h1>";
-  }
 </script>
   <head>
   <meta charset="utf-8" />
@@ -100,6 +95,12 @@
   </style>
 </head>
 <body>
+  <script>
+  const pwd = prompt("Inserisci la password:");
+  if (pwd !== "Marina") {
+    document.body.innerHTML = "<h1>Accesso negato</h1>";
+  }
+</script>
   <header>
     <div class="wrap brand">
       <div class="logo" aria-hidden="true"></div>
