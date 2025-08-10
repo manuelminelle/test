@@ -2,6 +2,26 @@
 <html lang="it">
 </script>
   <head>
+    <!-- BLOCCO PASSWORD (semplice, lato client) -->
+<script>
+  (function () {
+    // opzionale: evita di riproporre la password finché la scheda resta aperta
+    if (sessionStorage.getItem('authOK') === '1') return;
+
+    var ok = prompt('Inserisci la password:') === 'Marina';
+    if (ok) {
+      sessionStorage.setItem('authOK', '1'); // ricordati in questa sessione
+      return; // lascia caricare la pagina
+    }
+
+    // password errata: rimpiazza TUTTA la pagina e ferma il parsing
+    document.open();
+    document.write('<!doctype html><meta charset="utf-8"><title>Accesso negato</title>'
+      + '<style>body{font-family:system-ui;margin:0;padding:2rem}</style>'
+      + '<h1>Accesso negato</h1><p>Ricarica la pagina per riprovare.</p>');
+    document.close();
+  })();
+</script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dashboard Fitness – Mascia</title>
@@ -95,12 +115,6 @@
   </style>
 </head>
 <body>
-  <script>
-  const pwd = prompt("Inserisci la password:");
-  if (pwd !== "Marina") {
-    document.body.innerHTML = "<h1>Accesso negato</h1>";
-  }
-</script>
   <header>
     <div class="wrap brand">
       <div class="logo" aria-hidden="true"></div>
